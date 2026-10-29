@@ -593,6 +593,26 @@ func TestBuildSchedulerMetadataAccount_KeepsModelRateLimits(t *testing.T) {
 	require.Nil(t, got.Extra["unused_large_field"])
 }
 
+func TestBuildSchedulerMetadataAccount_KeepsOpenAIEndpointCapabilities(t *testing.T) {
+	account := service.Account{
+		ID:       91,
+		Platform: service.PlatformOpenAI,
+		Type:     service.AccountTypeAPIKey,
+		Credentials: map[string]any{
+			"api_key":             "secret-id",
+			"base_url":            "https://tokenhub.tencentmaas.com",
+			"openai_capabilities": []any{"tokenhub_video"},
+			"model_mapping": map[string]any{
+				"hailuo-h3": "Hailuo:H3",
+			},
+		},
+	}
+
+	got := buildSchedulerMetadataAccount(account)
+	require.Equal(t, []any{"tokenhub_video"}, got.Credentials["openai_capabilities"])
+	require.True(t, got.SupportsOpenAIEndpointCapability(service.OpenAIEndpointCapabilityTokenHubVideo))
+}
+
 func TestBuildSchedulerMetadataAccount_KeepsSparkShadowRoutingIdentity(t *testing.T) {
 	parentID := int64(100)
 	account := service.Account{

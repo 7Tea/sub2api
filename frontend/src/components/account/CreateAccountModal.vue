@@ -4812,19 +4812,29 @@ const openAITextEndpointCapabilityLabel = computed(() => {
 const openAIEndpointCapabilityOptions = computed<{ value: OpenAIEndpointCapability; label: string }[]>(() => [
   { value: 'chat_completions', label: openAITextEndpointCapabilityLabel.value },
   { value: 'embeddings', label: t('admin.accounts.openai.capabilityEmbeddings') },
-  { value: 'seedance', label: 'Seedance (Ark)' }
+  { value: 'seedance', label: 'Seedance (Ark)' },
+  { value: 'tokenhub_video', label: 'TokenHub Video (Ark)' }
 ])
 const openAITextGenerationCapabilityEnabled = computed(() =>
   openAIEndpointCapabilities.value.includes('chat_completions')
 )
 
 const normalizeOpenAIEndpointCapabilities = (values: OpenAIEndpointCapability[]) => {
-  const allowed: OpenAIEndpointCapability[] = ['chat_completions', 'embeddings', 'seedance']
+  const allowed: OpenAIEndpointCapability[] = ['chat_completions', 'embeddings', 'seedance', 'tokenhub_video']
   const selected = allowed.filter((value) => values.includes(value))
   return selected.length > 0 ? selected : ['chat_completions', 'embeddings'] as OpenAIEndpointCapability[]
 }
 
 const toggleOpenAIEndpointCapability = (capability: OpenAIEndpointCapability, event?: Event) => {
+  if (capability === 'tokenhub_video') {
+    openAIEndpointCapabilities.value = openAIEndpointCapabilities.value.includes(capability)
+      ? normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value.filter((value) => value !== capability))
+      : normalizeOpenAIEndpointCapabilities([...openAIEndpointCapabilities.value, capability])
+    if (openAIEndpointCapabilities.value.includes(capability)) {
+      apiKeyBaseUrl.value = 'https://tokenhub.tencentmaas.com'
+    }
+    return
+  }
   if (openAIEndpointCapabilities.value.includes(capability)) {
     if (openAIEndpointCapabilities.value.length <= 1) {
       const input = event?.target as HTMLInputElement | null
@@ -5033,7 +5043,6 @@ const form = reactive({
   group_ids: [] as number[],
   expires_at: null as number | null
 })
-
 // Helper to check if current type needs OAuth flow
 const isOAuthFlow = computed(() => {
   // Antigravity upstream 类型不需要 OAuth 流程

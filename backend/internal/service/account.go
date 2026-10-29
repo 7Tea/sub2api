@@ -97,6 +97,8 @@ const (
 	OpenAIEndpointCapabilityEmbeddings      OpenAIEndpointCapability = "embeddings"
 	OpenAIEndpointCapabilityAlphaSearch     OpenAIEndpointCapability = "alpha_search"
 	OpenAIEndpointCapabilityLive            OpenAIEndpointCapability = "live"
+	OpenAIEndpointCapabilityArkVideo        OpenAIEndpointCapability = "ark_video"
+	OpenAIEndpointCapabilityTokenHubVideo   OpenAIEndpointCapability = "tokenhub_video"
 	// OpenAIEndpointCapabilityGrokMediaGeneration keeps image/video generation
 	// away from Grok accounts that are explicitly disabled or whose billing
 	// entitlement probe was forbidden. Video status lookups intentionally do not
@@ -1917,10 +1919,19 @@ func (a *Account) SupportsOpenAIEndpointCapability(capability OpenAIEndpointCapa
 	if a == nil {
 		return false
 	}
+	if capability == OpenAIEndpointCapabilityArkVideo {
+		return a.SupportsOpenAIEndpointCapability(OpenAIEndpointCapabilitySeedance) ||
+			a.SupportsOpenAIEndpointCapability(OpenAIEndpointCapabilityTokenHubVideo)
+	}
 	if capability == OpenAIEndpointCapabilitySeedance {
 		configured, _ := a.openAIEndpointCapabilitySet()
 		return configured["seedance"] && a.Platform == PlatformOpenAI && a.Type == AccountTypeAPIKey &&
 			strings.TrimSpace(a.GetCredential("base_url")) != ""
+	}
+	if capability == OpenAIEndpointCapabilityTokenHubVideo {
+		configured, _ := a.openAIEndpointCapabilitySet()
+		return configured["tokenhub_video"] && a.Platform == PlatformOpenAI && a.Type == AccountTypeAPIKey &&
+			strings.TrimSpace(a.GetCredential("api_key")) != "" && isTokenHubImageAccount(a)
 	}
 	if capability == "" {
 		return true

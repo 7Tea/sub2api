@@ -1788,7 +1788,8 @@ const openAIEndpointCapabilityOptions = computed<
 >(() => [
   { value: 'chat_completions', label: openAITextEndpointCapabilityLabel.value },
   { value: 'embeddings', label: t('admin.accounts.openai.capabilityEmbeddings') },
-  { value: 'seedance', label: 'Seedance (Ark)' }
+  { value: 'seedance', label: 'Seedance (Ark)' },
+  { value: 'tokenhub_video', label: 'TokenHub Video (Ark)' }
 ])
 const openAITextGenerationCapabilityEnabled = computed(() =>
   openAIEndpointCapabilities.value.includes('chat_completions')
@@ -1798,7 +1799,7 @@ const openAIResponsesModeApplicable = computed(
 )
 
 const normalizeOpenAIEndpointCapabilities = (values: OpenAIEndpointCapability[]) => {
-  const allowed: OpenAIEndpointCapability[] = ['chat_completions', 'embeddings', 'seedance']
+  const allowed: OpenAIEndpointCapability[] = ['chat_completions', 'embeddings', 'seedance', 'tokenhub_video']
   const selected = allowed.filter((value) => values.includes(value))
   return selected.length > 0 ? selected : ['chat_completions', 'embeddings'] as OpenAIEndpointCapability[]
 }
@@ -1807,6 +1808,15 @@ const toggleOpenAIEndpointCapability = (
   capability: OpenAIEndpointCapability,
   event?: Event
 ) => {
+  if (capability === 'tokenhub_video') {
+    openAIEndpointCapabilities.value = openAIEndpointCapabilities.value.includes(capability)
+      ? normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value.filter((value) => value !== capability))
+      : normalizeOpenAIEndpointCapabilities([...openAIEndpointCapabilities.value, capability])
+    if (openAIEndpointCapabilities.value.includes(capability)) {
+      baseUrl.value = 'https://tokenhub.tencentmaas.com'
+    }
+    return
+  }
   if (openAIEndpointCapabilities.value.includes(capability)) {
     if (openAIEndpointCapabilities.value.length <= 1) {
       const input = event?.target as HTMLInputElement | null

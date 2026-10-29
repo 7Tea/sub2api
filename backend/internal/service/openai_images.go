@@ -88,6 +88,7 @@ type OpenAIImagesRequest struct {
 	Quality            string
 	Background         string
 	OutputFormat       string
+	LogoAdd            *int
 	Moderation         string
 	InputFidelity      string
 	Style              string
@@ -276,6 +277,17 @@ func parseOpenAIImagesJSONRequest(body []byte, req *OpenAIImagesRequest) error {
 	req.Quality = strings.TrimSpace(gjson.GetBytes(body, "quality").String())
 	req.Background = strings.TrimSpace(gjson.GetBytes(body, "background").String())
 	req.OutputFormat = strings.TrimSpace(gjson.GetBytes(body, "output_format").String())
+	logoAdd := gjson.GetBytes(body, "logo_add")
+	if !logoAdd.Exists() {
+		logoAdd = gjson.GetBytes(body, "logoAdd")
+	}
+	if logoAdd.Exists() {
+		if logoAdd.Type != gjson.Number {
+			return fmt.Errorf("invalid logo_add field type")
+		}
+		value := int(logoAdd.Int())
+		req.LogoAdd = &value
+	}
 	req.Moderation = strings.TrimSpace(gjson.GetBytes(body, "moderation").String())
 	req.InputFidelity = strings.TrimSpace(gjson.GetBytes(body, "input_fidelity").String())
 	req.Style = strings.TrimSpace(gjson.GetBytes(body, "style").String())
@@ -421,6 +433,12 @@ func parseOpenAIImagesMultipartRequest(body []byte, contentType string, req *Ope
 		case "output_format":
 			req.OutputFormat = value
 			req.HasNativeOptions = true
+		case "logo_add", "logoadd":
+			n, err := strconv.Atoi(value)
+			if err != nil {
+				return fmt.Errorf("invalid logo_add field value")
+			}
+			req.LogoAdd = &n
 		case "moderation":
 			req.Moderation = value
 			req.HasNativeOptions = true
@@ -512,7 +530,7 @@ func isGeminiCompatibleImageModel(model string) bool {
 }
 
 func validateCompatibleImagesModel(model string) error {
-	if isGeminiCompatibleImageModel(model) {
+	if isGeminiCompatibleImageModel(model) || isTokenHubImageModel(model) {
 		return nil
 	}
 	return validateOpenAIImagesModel(model)
@@ -521,7 +539,7 @@ func validateCompatibleImagesModel(model string) error {
 // RequiredCapabilityForModel also applies the API-key-only fence when channel
 // mapping introduces a compatible provider model after request parsing.
 func (req *OpenAIImagesRequest) RequiredCapabilityForModel(model string) OpenAIImagesCapability {
-	if isGeminiCompatibleImageModel(model) {
+	if isGeminiCompatibleImageModel(model) || isTokenHubImageModel(model) {
 		return OpenAIImagesCapabilityAPIKey
 	}
 	return req.RequiredCapability
@@ -543,7 +561,7 @@ func classifyOpenAIImagesCapability(req *OpenAIImagesRequest) OpenAIImagesCapabi
 	if req == nil {
 		return OpenAIImagesCapabilityNative
 	}
-	if isGeminiCompatibleImageModel(req.Model) {
+	if isGeminiCompatibleImageModel(req.Model) || isTokenHubImageModel(req.Model) {
 		return OpenAIImagesCapabilityAPIKey
 	}
 	if req.ExplicitModel || req.ExplicitSize {
@@ -609,6 +627,21 @@ func (s *OpenAIGatewayService) ForwardImages(
 	}
 	switch account.Type {
 	case AccountTypeAPIKey:
+		if isTokenHubImageAccount(account) {
+			model := strings.TrimSpace(parsed.Model)
+			if mapped := strings.TrimSpace(channelMappedModel); mapped != "" {
+				model = mapped
+			}
+			if mapped := strings.TrimSpace(account.GetMappedModel(model)); mapped != "" {
+				model = mapped
+			}
+			if isTokenHubOGImageModel(model) {
+				return s.forwardTokenHubOGImage(ctx, c, account, parsed, channelMappedModel)
+			}
+			if isTokenHubGNImageModel(model) {
+				return s.forwardTokenHubGNImage(ctx, c, account, parsed, channelMappedModel)
+			}
+		}
 		return s.forwardOpenAIImagesAPIKey(ctx, c, account, body, parsed, channelMappedModel)
 	case AccountTypeOAuth, AccountTypeSetupToken:
 		return s.forwardOpenAIImagesOAuth(ctx, c, account, parsed, channelMappedModel)

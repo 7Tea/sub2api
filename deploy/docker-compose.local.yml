@@ -160,6 +160,12 @@ services:
       # Examples: http://host:port, socks5://host:port
       - UPDATE_PROXY_URL=${UPDATE_PROXY_URL:-}
 
+      - KOX_BILLING_INTERNAL_API_KEY=${KOX_BILLING_INTERNAL_API_KEY:-}
+      - KOX_GATEWAY_USER_ID=${KOX_GATEWAY_USER_ID:-}
+      - KOX_GATEWAY_GROUP_ID=${KOX_GATEWAY_GROUP_ID:-}
+      - SUB2API_WEBHOOK_URL=${SUB2API_WEBHOOK_URL:-}
+      - SUB2API_WEBHOOK_SECRET=${SUB2API_WEBHOOK_SECRET:-}
+
       # =======================================================================
       # Gateway Upstream, Scheduling & Image Configuration
       # =======================================================================

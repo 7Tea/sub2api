@@ -36,6 +36,14 @@ type UsageBillingCommand struct {
 	CacheReadTokens     int
 	ImageCount          int
 	MediaType           string
+	BillingMode          string
+	RequestedModel       string
+	UpstreamModel        string
+	GroupID              *int64
+	TotalCost            float64
+	RateMultiplier       float64
+	AccountRateMultiplier float64
+	LocalUsageLog        *UsageLog
 
 	BalanceCost         float64
 	SubscriptionCost    float64

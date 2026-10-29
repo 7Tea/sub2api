@@ -278,6 +278,9 @@ type OpenAIForwardResult struct {
 	FirstTokenMs          *int
 	ClientDisconnect      bool
 	ImageCount            int
+	// ForceTokenBilling is used by upstreams that report a single pre-normalized
+	// token total for image generation instead of separate image-count usage.
+	ForceTokenBilling bool
 	// ImageEndpoint 标记请求来自专用图片端点；分组 image_count_billing 开关
 	// 只对这类请求生效，混合 Responses/Chat/WS 请求仍按 token 计费。
 	ImageEndpoint      bool

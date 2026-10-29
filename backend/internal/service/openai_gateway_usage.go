@@ -526,7 +526,9 @@ func (s *OpenAIGatewayService) RecordUsage(ctx context.Context, input *OpenAIRec
 		writeUsageLogBestEffort(ctx, s.usageLogRepo, usageLog, "service.openai_gateway")
 		return billingErr
 	}
-	writeUsageLogBestEffort(ctx, s.usageLogRepo, usageLog, "service.openai_gateway")
+	if usageLog.ID == 0 {
+		writeUsageLogBestEffort(ctx, s.usageLogRepo, usageLog, "service.openai_gateway")
+	}
 
 	return nil
 }
@@ -618,7 +620,7 @@ func (s *OpenAIGatewayService) calculateOpenAIRecordUsageCost(
 		return s.billingService.CalculateAudioCost(result.AudioUsage.Mode, result.AudioUsage.DurationOrUnits, cfg, webSearchMultiplier), nil
 	}
 
-	if result != nil && result.ImageCount > 0 {
+	if result != nil && result.ImageCount > 0 && !result.ForceTokenBilling {
 		// 分组显式开启按张计费且来自图片端点时强制走图片计费；否则渠道 token 定价优先。
 		// 混合的 Responses/Chat/WS 请求即使产出了图片，也不能因开关丢失文本 token 费用。
 		if imageCountBillingApplies(apiKey, result.ImageEndpoint) {

@@ -166,6 +166,14 @@ func (r *usageLogRepository) Create(ctx context.Context, log *service.UsageLog) 
 	return r.createBatched(ctx, log)
 }
 
+// CreateInTx writes a usage log in the caller's billing transaction.
+func (r *usageLogRepository) CreateInTx(ctx context.Context, tx *sql.Tx, log *service.UsageLog) (bool, error) {
+	if tx == nil {
+		return false, errors.New("usage log transaction is nil")
+	}
+	return r.createSingle(ctx, tx, log)
+}
+
 func (r *usageLogRepository) CreateBestEffort(ctx context.Context, log *service.UsageLog) error {
 	if log == nil {
 		return nil
