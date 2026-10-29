@@ -19,8 +19,17 @@ type usageBillingRepository struct {
 	koxBilling *koxbilling.Service
 }
 
-func NewUsageBillingRepository(_ *dbent.Client, sqlDB *sql.DB) service.UsageBillingRepository {
-	return &usageBillingRepository{db: sqlDB}
+func NewUsageBillingRepository(_ *dbent.Client, sqlDB *sql.DB, deps ...any) service.UsageBillingRepository {
+	r := &usageBillingRepository{db: sqlDB}
+	for _, dep := range deps {
+		switch v := dep.(type) {
+		case service.UsageLogRepository:
+			r.usageLogs = v
+		case *koxbilling.Service:
+			r.koxBilling = v
+		}
+	}
+	return r
 }
 
 func NewUsageBillingRepositoryWithDependencies(
@@ -67,12 +76,23 @@ func (r *usageBillingRepository) Apply(ctx context.Context, cmd *service.UsageBi
 	if err := r.applyUsageBillingEffects(ctx, tx, cmd, result); err != nil {
 		return nil, err
 	}
+
+	if r.usageLogs != nil && cmd.LocalUsageLog != nil {
+		if writer, ok := r.usageLogs.(interface {
+			CreateInTx(context.Context, *sql.Tx, *service.UsageLog) (bool, error)
+		}); ok {
+			if _, err := writer.CreateInTx(ctx, tx, cmd.LocalUsageLog); err != nil {
+				return nil, fmt.Errorf("create local usage log in billing transaction: %w", err)
+			}
+		}
+	}
+
 	koxCost := cmd.SubscriptionCost
 	if koxCost <= 0 {
 		koxCost = cmd.BalanceCost
 	}
 	if r.koxBilling != nil && koxCost > 0 {
-		recorded, err := r.koxBilling.RecordGatewayUsageTx(ctx, tx, cmd.APIKeyID, koxbilling.GatewayUsageInput{
+		_, err := r.koxBilling.RecordGatewayUsageTx(ctx, tx, cmd.APIKeyID, koxbilling.GatewayUsageInput{
 			ProviderRequestID: cmd.RequestID,
 			RequestID:         cmd.RequestID,
 			ReservationID:     "sub2api:" + cmd.RequestID,
@@ -99,15 +119,6 @@ func (r *usageBillingRepository) Apply(ctx context.Context, cmd *service.UsageBi
 		})
 		if err != nil {
 			return nil, fmt.Errorf("record kox usage: %w", err)
-		}
-		if recorded && r.usageLogs != nil && cmd.LocalUsageLog != nil {
-			if writer, ok := r.usageLogs.(interface {
-				CreateInTx(context.Context, *sql.Tx, *service.UsageLog) (bool, error)
-			}); ok {
-				if _, err := writer.CreateInTx(ctx, tx, cmd.LocalUsageLog); err != nil {
-					return nil, fmt.Errorf("create local usage log in billing transaction: %w", err)
-				}
-			}
 		}
 	}
 

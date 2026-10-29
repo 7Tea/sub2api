@@ -166,7 +166,9 @@ func (r *usageLogRepository) Create(ctx context.Context, log *service.UsageLog) 
 	return r.createBatched(ctx, log)
 }
 
-// CreateInTx writes a usage log in the caller's billing transaction.
+// CreateInTx writes a usage log using the caller's billing transaction. It is
+// intentionally narrow: the billing repository uses it to make a successful
+// charge and its local usage row atomic.
 func (r *usageLogRepository) CreateInTx(ctx context.Context, tx *sql.Tx, log *service.UsageLog) (bool, error) {
 	if tx == nil {
 		return false, errors.New("usage log transaction is nil")
