@@ -1089,6 +1089,8 @@ export default {
       },
       videoPricing: {
         title: '视频生成计费',
+        compositeDescription: '组合分组的视频请求使用本分组的单价，不继承账号所在其他分组的价格。HeyGen 使用 720p / 1080p 每秒价，Grok 可通过下方模型覆盖价单独配置。',
+        compositeModeHint: '费用 = 每秒单价 × 计费秒数 × 当前有效倍率。HeyGen 按成功视频的完整时长向上取整到秒；Grok 保持 1–15 秒规则。开启独立倍率后使用视频独立倍率。',
         heygenDescription: '配置 HeyGen 视频的每秒单价（USD/秒）。当前支持 720p 和 1080p，使用前必须配置对应分辨率价格。',
         heygenModeHint: 'HeyGen 按成功生成的完整视频时长计费，向上取整到整数秒，不设 15 秒上限。例如 68.7 秒按 69 秒结算。费用 = 每秒单价 × 计费秒数 × 当前有效倍率；开启独立倍率后使用视频独立倍率。',
         description:

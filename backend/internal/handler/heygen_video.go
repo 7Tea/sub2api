@@ -18,8 +18,8 @@ import (
 // through a dedicated HeyGen group and its native v3 request/response shapes.
 func (h *OpenAIGatewayHandler) HeyGenVideos(c *gin.Context) {
 	key, ok := middleware2.GetAPIKeyFromContext(c)
-	if !ok || key.Group == nil || key.Group.Platform != service.PlatformHeyGen {
-		h.errorResponse(c, http.StatusForbidden, "permission_error", "HeyGen videos require a HeyGen group")
+	if !ok || !admitMediaPlatform(c, key, service.PlatformHeyGen) {
+		h.errorResponse(c, http.StatusForbidden, "permission_error", "HeyGen videos require a HeyGen group or a composite route to HeyGen")
 		return
 	}
 	subject, ok := middleware2.GetAuthSubjectFromContext(c)

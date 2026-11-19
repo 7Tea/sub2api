@@ -124,6 +124,12 @@ func DetectModelPlatform(model string) (string, bool) {
 	}
 
 	switch {
+	case normalized == HeyGenVideoModel:
+		return PlatformHeyGen, true
+	case normalized == MediaKitASRModel, normalized == "minimax-voice-clone", isTokenHubMiniMaxTTSModel(normalized):
+		// These adapters use API-key accounts registered under OpenAI, even
+		// though the speech models carry the MiniMax provider name.
+		return PlatformOpenAI, true
 	case strings.HasPrefix(normalized, "anthropic.claude-"),
 		strings.HasPrefix(normalized, "claude-"):
 		return PlatformAnthropic, true

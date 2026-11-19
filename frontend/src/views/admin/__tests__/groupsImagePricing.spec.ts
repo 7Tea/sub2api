@@ -10,6 +10,7 @@ import {
   imagePricingI18nKey,
   supportsImagePricingPlatform,
   supportsVideoPricingPlatform,
+  supportsVoicePricingPlatform,
   videoPricingI18nKey,
 } from "../groupsImagePricing";
 
@@ -22,7 +23,18 @@ describe("groups image pricing platform support", () => {
 	it("enables video pricing controls for Grok and HeyGen", () => {
     expect(supportsVideoPricingPlatform("grok")).toBe(true);
 		expect(supportsVideoPricingPlatform("heygen")).toBe(true);
+    expect(supportsVideoPricingPlatform("composite")).toBe(true);
     expect(supportsVideoPricingPlatform("openai")).toBe(false);
+  });
+
+  it("exposes Composite speech pricing without changing unsupported platforms", () => {
+    expect(supportsVoicePricingPlatform('composite')).toBe(true);
+    expect(supportsVoicePricingPlatform('openai')).toBe(true);
+    expect(supportsVoicePricingPlatform('grok')).toBe(true);
+    expect(supportsVoicePricingPlatform('heygen')).toBe(false);
+    expect(supportsVoicePricingPlatform('anthropic')).toBe(false);
+    expect(videoPricingI18nKey('description', 'composite')).toBe('admin.groups.videoPricing.compositeDescription');
+    expect(videoPricingI18nKey('modeHint', 'composite')).toBe('admin.groups.videoPricing.compositeModeHint');
   });
 
   it("keeps non-media group platforms out of the image pricing controls", () => {

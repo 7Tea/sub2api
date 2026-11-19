@@ -114,6 +114,10 @@ func RegisterGatewayRoutes(
 		})
 	}
 	videoStatusHandler := func(c *gin.Context) {
+		if getGroupPlatform(c) == service.PlatformComposite {
+			h.OpenAIGateway.CompositeVideoStatus(c)
+			return
+		}
 		if getGroupPlatform(c) == service.PlatformHeyGen {
 			h.OpenAIGateway.HeyGenVideos(c)
 			return

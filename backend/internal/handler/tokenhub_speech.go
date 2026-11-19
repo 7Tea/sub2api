@@ -26,8 +26,8 @@ func (h *OpenAIGatewayHandler) TokenHubMiniMaxVoiceClone(c *gin.Context) {
 
 func (h *OpenAIGatewayHandler) tokenHubMiniMaxSpeech(c *gin.Context, operation string) {
 	key, ok := middleware2.GetAPIKeyFromContext(c)
-	if !ok || key.Group == nil || key.Group.Platform != service.PlatformOpenAI {
-		h.errorResponse(c, http.StatusForbidden, "permission_error", "TokenHub MiniMax speech requires an OpenAI group")
+	if !ok || !admitMediaPlatform(c, key, service.PlatformOpenAI) {
+		h.errorResponse(c, http.StatusForbidden, "permission_error", "TokenHub MiniMax speech requires an OpenAI group or a composite route to OpenAI")
 		return
 	}
 	if _, ok := middleware2.GetAuthSubjectFromContext(c); !ok {

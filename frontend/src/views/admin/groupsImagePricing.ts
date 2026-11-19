@@ -16,12 +16,19 @@ export const defaultAllowImageGenerationForPlatform = (platform: string): boolea
   imageGenerationDefaultPlatforms.has(platform);
 
 export const supportsVideoPricingPlatform = (platform: string): boolean =>
-	platform === "grok" || platform === "heygen";
+	platform === "grok" || platform === "heygen" || platform === "composite";
+
+export const supportsVoicePricingPlatform = (platform: string): boolean =>
+  platform === "grok" || platform === "openai" || platform === "composite";
 
 export const imagePricingI18nKey = (_platform: string, key: string): string =>
   `admin.groups.imagePricing.${key}`;
 
 export const videoPricingI18nKey = (key: string, platform?: string): string => {
+  if (platform === 'composite') {
+    if (key === 'description') return 'admin.groups.videoPricing.compositeDescription';
+    if (key === 'modeHint') return 'admin.groups.videoPricing.compositeModeHint';
+  }
   if (platform === 'heygen') {
     if (key === 'description') return 'admin.groups.videoPricing.heygenDescription';
     if (key === 'modeHint') return 'admin.groups.videoPricing.heygenModeHint';

@@ -28,8 +28,8 @@ type mediaKitASRTaskResponse struct {
 
 func (h *OpenAIGatewayHandler) MediaKitASRTasks(c *gin.Context) {
 	key, ok := middleware2.GetAPIKeyFromContext(c)
-	if !ok || key.Group == nil || key.Group.Platform != service.PlatformOpenAI {
-		h.errorResponse(c, http.StatusForbidden, "permission_error", "MediaKit ASR requires an OpenAI group")
+	if !ok || !admitMediaPlatform(c, key, service.PlatformOpenAI) {
+		h.errorResponse(c, http.StatusForbidden, "permission_error", "MediaKit ASR requires an OpenAI group or a composite route to OpenAI")
 		return
 	}
 	subject, ok := middleware2.GetAuthSubjectFromContext(c)

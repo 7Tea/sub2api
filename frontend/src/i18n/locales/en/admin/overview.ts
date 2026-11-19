@@ -1092,6 +1092,8 @@ export default {
       },
       videoPricing: {
         title: 'Video Generation Pricing',
+        compositeDescription: 'Composite video requests use this group’s prices, without inheriting prices from other groups. Set 720p / 1080p per-second prices for HeyGen and use model overrides for Grok.',
+        compositeModeHint: 'Cost = price per second × billable seconds × effective multiplier. HeyGen uses the full completed duration rounded up to seconds; Grok keeps its 1–15 second policy. Independent mode uses the video multiplier.',
         heygenDescription: 'Configure HeyGen video prices in USD per second. Set a price for the requested 720p or 1080p resolution before use.',
         heygenModeHint: 'HeyGen bills the full completed video duration, rounded up to whole seconds, without a 15-second cap. For example, 68.7 seconds is billed as 69 seconds. Cost = price per second × billable seconds × effective multiplier; independent mode uses the video multiplier.',
         description:
