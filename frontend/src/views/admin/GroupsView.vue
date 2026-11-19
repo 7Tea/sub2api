@@ -1511,7 +1511,7 @@
 
         <!-- Grok voice prices and OpenAI-group MediaKit ASR pricing. -->
         <div
-          v-if="createForm.platform === 'grok' || createForm.platform === 'openai'"
+          v-if="supportsVoicePricingPlatform(createForm.platform)"
           class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4"
         >
           <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1545,7 +1545,7 @@
                 data-testid="create-audio-realtime-price"
               />
             </div>
-            <div v-if="createForm.platform === 'grok' || createForm.platform === 'openai'">
+            <div>
               <label class="input-label">{{ t("admin.groups.voicePricing.audioTtsPerMillionChars") }}</label>
               <input
                 v-model.number="createForm.audio_tts_price_per_million_chars"
@@ -3175,7 +3175,7 @@
 
         <!-- Grok Voice 显式定价（仅 grok 平台） -->
         <div
-          v-if="editForm.platform === 'grok' || editForm.platform === 'openai'"
+          v-if="supportsVoicePricingPlatform(editForm.platform)"
           class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4"
         >
           <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -3209,7 +3209,7 @@
                 data-testid="edit-audio-realtime-price"
               />
             </div>
-            <div v-if="editForm.platform === 'grok' || editForm.platform === 'openai'">
+            <div>
               <label class="input-label">{{ t("admin.groups.voicePricing.audioTtsPerMillionChars") }}</label>
               <input
                 v-model.number="editForm.audio_tts_price_per_million_chars"
@@ -4400,6 +4400,7 @@ import {
   imagePricingI18nKey,
   supportsImagePricingPlatform,
   supportsVideoPricingPlatform,
+  supportsVoicePricingPlatform,
   videoPricingI18nKey,
 } from "./groupsImagePricing";
 import {
