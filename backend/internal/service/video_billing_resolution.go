@@ -31,6 +31,15 @@ func NormalizeVideoBillingDurationSecondsOrDefault(durationSeconds int) int {
 	return durationSeconds
 }
 
+// HeyGen reports completed output duration and supports videos longer than
+// Grok's request limit. Keep the existing Grok policy for all other models.
+func normalizeVideoBillingDurationForModel(model string, durationSeconds int) int {
+	if strings.EqualFold(strings.TrimSpace(model), HeyGenVideoModel) {
+		return max(0, durationSeconds)
+	}
+	return NormalizeVideoBillingDurationSecondsOrDefault(durationSeconds)
+}
+
 // LookupVideoBillingResolution 归一化分辨率并报告是否为已知档位。
 // 配置解析路径必须用它而不是 OrDefault：把无法识别的档位（如 "4k"、拼错的
 // "1080i"）静默折算成 480p，会让管理员配的高分辨率单价被挂到低分辨率档上。

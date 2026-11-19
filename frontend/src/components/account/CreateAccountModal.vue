@@ -162,6 +162,20 @@
           </button>
           <button
             type="button"
+            data-testid="platform-button-heygen"
+            @click="form.platform = 'heygen'"
+            :class="[
+              'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all',
+              form.platform === 'heygen'
+                ? 'bg-white text-primary-600 shadow-sm dark:bg-dark-600 dark:text-primary-400'
+                : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+            ]"
+          >
+            <Icon name="key" size="sm" />
+            HeyGen
+          </button>
+          <button
+            type="button"
             @click="selectTypeSafePlatform()"
             :class="[
               'flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all',
@@ -511,6 +525,14 @@
               <span class="text-xs text-gray-500 dark:text-gray-400">{{ t('admin.accounts.types.responsesApi') }}</span>
             </div>
           </button>
+        </div>
+      </div>
+
+      <!-- OpenCode Zen vs Go -->
+      <div v-if="form.platform === 'heygen'" data-testid="heygen-account-type">
+        <label class="input-label">{{ t('admin.accounts.accountType') }}</label>
+        <div class="rounded-lg border-2 border-purple-500 bg-purple-50 p-3 text-sm font-medium dark:bg-purple-900/20">
+          API Key
         </div>
       </div>
 
@@ -4256,7 +4278,7 @@ const withUpstreamRequestIdHeader = <T extends Record<string, unknown> | undefin
 const baseUrlHint = computed(() => {
   if (form.platform === 'openai') return t('admin.accounts.openai.baseUrlHint')
   if (form.platform === 'gemini') return t('admin.accounts.gemini.baseUrlHint')
-  if (form.platform === 'grok') return ''
+  if (form.platform === 'grok' || form.platform === 'heygen') return ''
   return t('admin.accounts.baseUrlHint')
 })
 
@@ -4264,7 +4286,7 @@ const apiKeyHint = computed(() => {
   if (form.platform === 'openai') return t('admin.accounts.openai.apiKeyHint')
   if (form.platform === 'gemini') return t('admin.accounts.gemini.apiKeyHint')
   // Grok 与多协议供应商没有对应的说明文案；通用文案指 Claude Console Key。
-  if (form.platform === 'grok' || isMultiProtocolPlatform.value) return ''
+  if (form.platform === 'grok' || form.platform === 'heygen' || isMultiProtocolPlatform.value) return ''
   return t('admin.accounts.apiKeyHint')
 })
 
@@ -4281,6 +4303,8 @@ const apiKeyBaseUrlPlaceholder = computed(() => {
       return 'https://generativelanguage.googleapis.com'
     case 'grok':
       return 'https://api.x.ai/v1'
+    case 'heygen':
+      return 'https://api.heygen.com/v3'
     case 'typesafe':
       return 'https://api.typesafe.ai'
     default:
@@ -4296,6 +4320,8 @@ const apiKeyValuePlaceholder = computed(() => {
       return 'AQ.Ab...'
     case 'grok':
       return 'xai-...'
+    case 'heygen':
+      return 'HeyGen API Key'
     case 'kimi':
       return 'sk-...'
     case 'zhipu':
@@ -4813,20 +4839,40 @@ const openAIEndpointCapabilityOptions = computed<{ value: OpenAIEndpointCapabili
   { value: 'chat_completions', label: openAITextEndpointCapabilityLabel.value },
   { value: 'embeddings', label: t('admin.accounts.openai.capabilityEmbeddings') },
   { value: 'seedance', label: 'Seedance (Ark)' },
-  { value: 'tokenhub_video', label: 'TokenHub Video (Ark)' }
+  { value: 'tokenhub_video', label: 'TokenHub Video (Ark)' },
+  { value: 'tokenhub_speech', label: 'TokenHub MiniMax TTS / Voice Clone' },
+  { value: 'mediakit_asr', label: 'Volcengine MediaKit ASR' }
 ])
 const openAITextGenerationCapabilityEnabled = computed(() =>
   openAIEndpointCapabilities.value.includes('chat_completions')
 )
 
 const normalizeOpenAIEndpointCapabilities = (values: OpenAIEndpointCapability[]) => {
-  const allowed: OpenAIEndpointCapability[] = ['chat_completions', 'embeddings', 'seedance', 'tokenhub_video']
+  const allowed: OpenAIEndpointCapability[] = ['chat_completions', 'embeddings', 'seedance', 'tokenhub_video', 'tokenhub_speech', 'mediakit_asr']
   const selected = allowed.filter((value) => values.includes(value))
   return selected.length > 0 ? selected : ['chat_completions', 'embeddings'] as OpenAIEndpointCapability[]
 }
 
 const toggleOpenAIEndpointCapability = (capability: OpenAIEndpointCapability, event?: Event) => {
   if (capability === 'tokenhub_video') {
+    openAIEndpointCapabilities.value = openAIEndpointCapabilities.value.includes(capability)
+      ? normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value.filter((value) => value !== capability))
+      : normalizeOpenAIEndpointCapabilities([...openAIEndpointCapabilities.value, capability])
+    if (openAIEndpointCapabilities.value.includes(capability)) {
+      apiKeyBaseUrl.value = 'https://tokenhub.tencentmaas.com'
+    }
+    return
+  }
+  if (capability === 'mediakit_asr') {
+    openAIEndpointCapabilities.value = openAIEndpointCapabilities.value.includes(capability)
+      ? normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value.filter((value) => value !== capability))
+      : normalizeOpenAIEndpointCapabilities([...openAIEndpointCapabilities.value, capability])
+    if (openAIEndpointCapabilities.value.includes(capability)) {
+      apiKeyBaseUrl.value = 'https://mediakit.cn-beijing.volces.com/api/v1'
+    }
+    return
+  }
+  if (capability === 'tokenhub_speech') {
     openAIEndpointCapabilities.value = openAIEndpointCapabilities.value.includes(capability)
       ? normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value.filter((value) => value !== capability))
       : normalizeOpenAIEndpointCapabilities([...openAIEndpointCapabilities.value, capability])
@@ -4857,7 +4903,7 @@ const toggleOpenAIEndpointCapability = (capability: OpenAIEndpointCapability, ev
 
 const applyOpenAIEndpointCapabilities = (credentials: Record<string, unknown>) => {
   const capabilities = normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value)
-  if (capabilities.length === 2 && !capabilities.includes('seedance')) {
+  if (capabilities.length === 2 && capabilities.includes('chat_completions') && capabilities.includes('embeddings')) {
     delete credentials.openai_capabilities
     return
   }
@@ -5156,6 +5202,8 @@ watch(
             ? 'https://generativelanguage.googleapis.com'
             : newPlatform === 'grok'
               ? 'https://api.x.ai/v1'
+              : newPlatform === 'heygen'
+                ? 'https://api.heygen.com/v3'
               : newPlatform === 'typesafe'
                 ? 'https://api.typesafe.ai'
               : 'https://api.anthropic.com'
@@ -5198,6 +5246,12 @@ watch(
     }
     if (newPlatform !== 'anthropic' && accountCategory.value === 'bedrock') {
       accountCategory.value = 'oauth-based'
+    }
+    if (newPlatform === 'heygen') {
+      accountCategory.value = 'apikey'
+      modelRestrictionMode.value = 'whitelist'
+      allowedModels.value = ['heygen-avatar-video']
+      upstreamBillingAutoProbeEnabled.value = false
     }
     // Reset Bedrock fields when switching platforms
     bedrockAccessKeyId.value = ''
@@ -6123,6 +6177,8 @@ const handleSubmit = async () => {
         ? 'https://generativelanguage.googleapis.com'
         : form.platform === 'grok'
           ? 'https://api.x.ai/v1'
+          : form.platform === 'heygen'
+            ? 'https://api.heygen.com/v3'
           : form.platform === 'typesafe'
             ? 'https://api.typesafe.ai'
           : 'https://api.anthropic.com'

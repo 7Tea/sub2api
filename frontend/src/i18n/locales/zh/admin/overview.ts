@@ -1089,6 +1089,8 @@ export default {
       },
       videoPricing: {
         title: '视频生成计费',
+        heygenDescription: '配置 HeyGen 视频的每秒单价（USD/秒）。当前支持 720p 和 1080p，使用前必须配置对应分辨率价格。',
+        heygenModeHint: 'HeyGen 按成功生成的完整视频时长计费，向上取整到整数秒，不设 15 秒上限。例如 68.7 秒按 69 秒结算。费用 = 每秒单价 × 计费秒数 × 当前有效倍率；开启独立倍率后使用视频独立倍率。',
         description:
           '配置 Grok 视频生成的每秒单价（USD/秒），留空则使用默认每秒价（grok-imagine-video：480p $0.05/s、720p $0.07/s；video-1.5：480p $0.08/s、720p $0.14/s、1080p $0.25/s）',
         modelOverridesTitle: '按模型覆盖视频价格',
@@ -1116,6 +1118,8 @@ export default {
       voicePricing: {
         title: 'Grok Voice 定价',
         description: '分组级 Voice realtime / TTS / STT 单价（USD）。留空表示未配置。',
+        mediaKitASRTitle: 'ASR / TTS 语音定价',
+        mediaKitASRDescription: 'MediaKit ASR 按识别时长计费，TokenHub MiniMax TTS 按字符计费。留空分别使用 STT/TTS 默认价格。',
         audioRealtimePerMin: 'Realtime 每分钟价格（USD）',
         audioTtsPerMillionChars: 'TTS 每百万字符价格（USD）',
         audioSttPerHour: 'STT 每小时价格（USD）',

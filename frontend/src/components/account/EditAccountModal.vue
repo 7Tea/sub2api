@@ -4017,14 +4017,16 @@ const openAIEndpointCapabilityOptions = computed<{ value: OpenAIEndpointCapabili
   { value: 'chat_completions', label: openAITextEndpointCapabilityLabel.value },
   { value: 'embeddings', label: t('admin.accounts.openai.capabilityEmbeddings') },
   { value: 'seedance', label: 'Seedance (Ark)' },
-  { value: 'tokenhub_video', label: 'TokenHub Video (Ark)' }
+  { value: 'tokenhub_video', label: 'TokenHub Video (Ark)' },
+  { value: 'tokenhub_speech', label: 'TokenHub MiniMax TTS / Voice Clone' },
+  { value: 'mediakit_asr', label: 'Volcengine MediaKit ASR' }
 ])
 const openAITextGenerationCapabilityEnabled = computed(() =>
   openAIEndpointCapabilities.value.includes('chat_completions')
 )
 
 const normalizeOpenAIEndpointCapabilities = (values: OpenAIEndpointCapability[]) => {
-  const allowed: OpenAIEndpointCapability[] = ['chat_completions', 'embeddings', 'seedance', 'tokenhub_video']
+  const allowed: OpenAIEndpointCapability[] = ['chat_completions', 'embeddings', 'seedance', 'tokenhub_video', 'tokenhub_speech', 'mediakit_asr']
   const selected = allowed.filter((value) => values.includes(value))
   return selected.length > 0 ? selected : ['chat_completions', 'embeddings'] as OpenAIEndpointCapability[]
 }
@@ -4034,7 +4036,7 @@ const readOpenAIEndpointCapabilities = (credentials?: Record<string, unknown>): 
   if (Array.isArray(raw)) {
     return normalizeOpenAIEndpointCapabilities(
       raw.filter((value): value is OpenAIEndpointCapability =>
-        value === 'chat_completions' || value === 'embeddings' || value === 'seedance' || value === 'tokenhub_video'
+        value === 'chat_completions' || value === 'embeddings' || value === 'seedance' || value === 'tokenhub_video' || value === 'tokenhub_speech' || value === 'mediakit_asr'
       )
     )
   }
@@ -4051,6 +4053,24 @@ const readOpenAIEndpointCapabilities = (credentials?: Record<string, unknown>): 
 
 const toggleOpenAIEndpointCapability = (capability: OpenAIEndpointCapability, event?: Event) => {
   if (capability === 'tokenhub_video') {
+    openAIEndpointCapabilities.value = openAIEndpointCapabilities.value.includes(capability)
+      ? normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value.filter((value) => value !== capability))
+      : normalizeOpenAIEndpointCapabilities([...openAIEndpointCapabilities.value, capability])
+    if (openAIEndpointCapabilities.value.includes(capability)) {
+      editBaseUrl.value = 'https://tokenhub.tencentmaas.com'
+    }
+    return
+  }
+  if (capability === 'mediakit_asr') {
+    openAIEndpointCapabilities.value = openAIEndpointCapabilities.value.includes(capability)
+      ? normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value.filter((value) => value !== capability))
+      : normalizeOpenAIEndpointCapabilities([...openAIEndpointCapabilities.value, capability])
+    if (openAIEndpointCapabilities.value.includes(capability)) {
+      editBaseUrl.value = 'https://mediakit.cn-beijing.volces.com/api/v1'
+    }
+    return
+  }
+  if (capability === 'tokenhub_speech') {
     openAIEndpointCapabilities.value = openAIEndpointCapabilities.value.includes(capability)
       ? normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value.filter((value) => value !== capability))
       : normalizeOpenAIEndpointCapabilities([...openAIEndpointCapabilities.value, capability])
@@ -4081,7 +4101,7 @@ const toggleOpenAIEndpointCapability = (capability: OpenAIEndpointCapability, ev
 
 const applyOpenAIEndpointCapabilities = (credentials: Record<string, unknown>) => {
   const capabilities = normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value)
-  if (capabilities.length === 2 && !capabilities.includes('seedance')) {
+  if (capabilities.length === 2 && capabilities.includes('chat_completions') && capabilities.includes('embeddings')) {
     delete credentials.openai_capabilities
     return
   }
@@ -4179,6 +4199,7 @@ const defaultBaseUrl = computed(() => {
   if (props.account?.platform === 'openai') return 'https://api.openai.com'
   if (props.account?.platform === 'gemini') return 'https://generativelanguage.googleapis.com'
   if (props.account?.platform === 'grok') return 'https://api.x.ai/v1'
+  if (props.account?.platform === 'heygen') return 'https://api.heygen.com/v3'
   if (props.account?.platform === 'typesafe') return 'https://api.typesafe.ai'
   // CN 供应商：按当前模式/协议回落到官方预设（清空输入框提交时使用），
   // 不能落到 anthropic 默认值（会被当 CC base 拼出错误端点）。

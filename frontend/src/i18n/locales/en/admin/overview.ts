@@ -1092,6 +1092,8 @@ export default {
       },
       videoPricing: {
         title: 'Video Generation Pricing',
+        heygenDescription: 'Configure HeyGen video prices in USD per second. Set a price for the requested 720p or 1080p resolution before use.',
+        heygenModeHint: 'HeyGen bills the full completed video duration, rounded up to whole seconds, without a 15-second cap. For example, 68.7 seconds is billed as 69 seconds. Cost = price per second × billable seconds × effective multiplier; independent mode uses the video multiplier.',
         description:
           'Configure Grok video generation prices in USD per second of output video. Leave empty to use the default per-second rates (grok-imagine-video: $0.05/s 480p, $0.07/s 720p; video-1.5: $0.08/s 480p, $0.14/s 720p, $0.25/s 1080p).',
         modelOverridesTitle: 'Per-model video price overrides',
@@ -1119,6 +1121,8 @@ export default {
       voicePricing: {
         title: 'Grok Voice Pricing',
         description: 'Optional per-group prices for Voice realtime / TTS / STT (USD). Leave empty to leave unpriced.',
+        mediaKitASRTitle: 'ASR / TTS Voice Pricing',
+        mediaKitASRDescription: 'MediaKit ASR is billed by audio duration and TokenHub MiniMax TTS by characters. Leave empty to use default STT/TTS prices.',
         audioRealtimePerMin: 'Realtime price per minute (USD)',
         audioTtsPerMillionChars: 'TTS price per million chars (USD)',
         audioSttPerHour: 'STT price per hour (USD)',

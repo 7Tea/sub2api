@@ -19,8 +19,9 @@ describe("groups image pricing platform support", () => {
     expect(imagePricingPlatforms.has("grok")).toBe(true);
   });
 
-  it("enables video pricing controls for Grok only", () => {
+	it("enables video pricing controls for Grok and HeyGen", () => {
     expect(supportsVideoPricingPlatform("grok")).toBe(true);
+		expect(supportsVideoPricingPlatform("heygen")).toBe(true);
     expect(supportsVideoPricingPlatform("openai")).toBe(false);
   });
 
@@ -46,6 +47,9 @@ describe("groups image pricing platform support", () => {
       "admin.groups.imagePricing.title",
     );
     expect(videoPricingI18nKey("title")).toBe("admin.groups.videoPricing.title");
+    expect(videoPricingI18nKey("modeHint", "grok")).toBe("admin.groups.videoPricing.modeHint");
+    expect(videoPricingI18nKey("modeHint", "heygen")).toBe("admin.groups.videoPricing.heygenModeHint");
+    expect(videoPricingI18nKey("description", "heygen")).toBe("admin.groups.videoPricing.heygenDescription");
   });
 
   it("uses Grok media defaults instead of generic image fallback placeholders", () => {

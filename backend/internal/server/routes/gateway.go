@@ -64,6 +64,10 @@ func RegisterGatewayRoutes(
 		dispatchCodexModelsGateway(c, h.OpenAIGateway.CodexModels, h.Gateway.CodexModels)
 	}
 	modelsHandler := func(c *gin.Context) {
+		if getGroupPlatform(c) == service.PlatformHeyGen {
+			h.OpenAIGateway.HeyGenModels(c)
+			return
+		}
 		if c.Query("client_version") != "" {
 			codexModelsHandler(c)
 			return
@@ -90,6 +94,10 @@ func RegisterGatewayRoutes(
 		}
 	}
 	videoGenerationHandler := func(c *gin.Context) {
+		if getGroupPlatform(c) == service.PlatformHeyGen {
+			h.OpenAIGateway.HeyGenVideos(c)
+			return
+		}
 		// Video status/content lookups below already allow Composite groups; keep
 		// task creation aligned so composite keys that route to Grok accounts can
 		// submit video generation jobs.
@@ -106,6 +114,10 @@ func RegisterGatewayRoutes(
 		})
 	}
 	videoStatusHandler := func(c *gin.Context) {
+		if getGroupPlatform(c) == service.PlatformHeyGen {
+			h.OpenAIGateway.HeyGenVideos(c)
+			return
+		}
 		// Video status requests do not carry a model, so composite groups cannot
 		// be resolved by compositeTargetPlatformMiddleware. Route them through
 		// the Grok handler and let scheduler/account selection enforce capacity.
@@ -280,16 +292,26 @@ func RegisterGatewayRoutes(
 		gateway.GET("/videos/:request_id", videoStatusHandler)
 		gateway.GET("/videos/:request_id/content", videoContentHandler)
 
-		// xAI Voice APIs (Grok platform only): HTTP TTS/STT + Realtime WS.
-		// Not part of the creation-center product surface — gateway relay only.
+		// xAI Voice and TokenHub MiniMax TTS/voice clone use different upstream
+		// protocols but share the voice endpoint surface by group platform.
 		voiceHandler := func(endpoint string) gin.HandlerFunc {
 			return func(c *gin.Context) {
-				if getGroupPlatform(c) != service.PlatformGrok {
-					service.MarkOpsClientBusinessLimited(c, service.OpsClientBusinessLimitedReasonLocalFeatureGate)
-					c.JSON(http.StatusNotFound, gin.H{"error": gin.H{"type": "not_found_error", "message": "Voice API is not supported for this platform"}})
+				switch getGroupPlatform(c) {
+				case service.PlatformGrok:
+					h.OpenAIGateway.GrokVoice(c, endpoint)
 					return
+				case service.PlatformOpenAI:
+					if endpoint == "tts" {
+						h.OpenAIGateway.TokenHubMiniMaxTTS(c)
+						return
+					}
+					if endpoint == "custom-voices" && c.Request.Method == http.MethodPost {
+						h.OpenAIGateway.TokenHubMiniMaxVoiceClone(c)
+						return
+					}
 				}
-				h.OpenAIGateway.GrokVoice(c, endpoint)
+				service.MarkOpsClientBusinessLimited(c, service.OpsClientBusinessLimitedReasonLocalFeatureGate)
+				c.JSON(http.StatusNotFound, gin.H{"error": gin.H{"type": "not_found_error", "message": "Voice API is not supported for this platform"}})
 			}
 		}
 		gateway.POST("/tts", voiceHandler("tts"))
@@ -375,6 +397,8 @@ func RegisterGatewayRoutes(
 		rootRoute(http.MethodGet, prefix+"/contents/generations/tasks/:task_id", bodyLimit, h.OpenAIGateway.SeedanceTasks)
 		rootRoute(http.MethodDelete, prefix+"/contents/generations/tasks/:task_id", bodyLimit, h.OpenAIGateway.SeedanceTasks)
 	}
+	rootRoute(http.MethodPost, handler.EndpointMediaKitASRTasks, bodyLimit, h.OpenAIGateway.MediaKitASRTasks)
+	rootRoute(http.MethodGet, handler.EndpointMediaKitASRTasks+"/:task_id", bodyLimit, h.OpenAIGateway.MediaKitASRTasks)
 	rootRoute(http.MethodPost, "/responses", bodyLimit, responsesHandler)
 	rootRoute(http.MethodPost, "/responses/*subpath", bodyLimit, guardResponsesSubpath(responsesHandler))
 	rootRoute(http.MethodPost, "/alpha/search", textBodyLimit, h.OpenAIGateway.AlphaSearch)
@@ -438,12 +462,22 @@ func RegisterGatewayRoutes(
 
 	rootVoiceHandler := func(endpoint string) gin.HandlerFunc {
 		return func(c *gin.Context) {
-			if getGroupPlatform(c) != service.PlatformGrok {
-				service.MarkOpsClientBusinessLimited(c, service.OpsClientBusinessLimitedReasonLocalFeatureGate)
-				c.JSON(http.StatusNotFound, gin.H{"error": gin.H{"type": "not_found_error", "message": "Voice API is not supported for this platform"}})
+			switch getGroupPlatform(c) {
+			case service.PlatformGrok:
+				h.OpenAIGateway.GrokVoice(c, endpoint)
 				return
+			case service.PlatformOpenAI:
+				if endpoint == "tts" {
+					h.OpenAIGateway.TokenHubMiniMaxTTS(c)
+					return
+				}
+				if endpoint == "custom-voices" && c.Request.Method == http.MethodPost {
+					h.OpenAIGateway.TokenHubMiniMaxVoiceClone(c)
+					return
+				}
 			}
-			h.OpenAIGateway.GrokVoice(c, endpoint)
+			service.MarkOpsClientBusinessLimited(c, service.OpsClientBusinessLimitedReasonLocalFeatureGate)
+			c.JSON(http.StatusNotFound, gin.H{"error": gin.H{"type": "not_found_error", "message": "Voice API is not supported for this platform"}})
 		}
 	}
 	rootRoute(http.MethodPost, "/tts", bodyLimit, rootVoiceHandler("tts"))
