@@ -292,6 +292,8 @@ type OpenAIForwardResult struct {
 	ImageSizeBreakdown map[string]int
 	VideoCount         int
 	VideoResolution    string
+	// Preserve request pricing until asynchronous completion usage arrives.
+	OutputTokenPricePerTokenOverride *float64
 	// VideoDurationSeconds is billable whole seconds. Grok uses its 1-15 second
 	// request range; HeyGen uses completed output duration rounded up to seconds.
 	VideoDurationSeconds int

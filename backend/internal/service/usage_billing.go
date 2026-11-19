@@ -22,28 +22,28 @@ type UsageBillingCommand struct {
 	RequestFingerprint string
 	RequestPayloadHash string
 
-	UserID              int64
-	AccountID           int64
-	SubscriptionID      *int64
-	AccountType         string
-	Model               string
-	ServiceTier         string
-	ReasoningEffort     string
-	BillingType         int8
-	InputTokens         int
-	OutputTokens        int
-	CacheCreationTokens int
-	CacheReadTokens     int
-	ImageCount          int
-	MediaType           string
-	BillingMode          string
-	RequestedModel       string
-	UpstreamModel        string
-	GroupID              *int64
-	TotalCost            float64
-	RateMultiplier       float64
+	UserID                int64
+	AccountID             int64
+	SubscriptionID        *int64
+	AccountType           string
+	Model                 string
+	ServiceTier           string
+	ReasoningEffort       string
+	BillingType           int8
+	InputTokens           int
+	OutputTokens          int
+	CacheCreationTokens   int
+	CacheReadTokens       int
+	ImageCount            int
+	MediaType             string
+	BillingMode           string
+	RequestedModel        string
+	UpstreamModel         string
+	GroupID               *int64
+	TotalCost             float64
+	RateMultiplier        float64
 	AccountRateMultiplier float64
-	LocalUsageLog        *UsageLog
+	LocalUsageLog         *UsageLog
 
 	BalanceCost         float64
 	SubscriptionCost    float64
