@@ -99,6 +99,8 @@ const (
 	OpenAIEndpointCapabilityLive            OpenAIEndpointCapability = "live"
 	OpenAIEndpointCapabilityArkVideo        OpenAIEndpointCapability = "ark_video"
 	OpenAIEndpointCapabilityTokenHubVideo   OpenAIEndpointCapability = "tokenhub_video"
+	OpenAIEndpointCapabilityTokenHubSpeech  OpenAIEndpointCapability = "tokenhub_speech"
+	OpenAIEndpointCapabilityMediaKitASR     OpenAIEndpointCapability = "mediakit_asr"
 	// OpenAIEndpointCapabilityGrokMediaGeneration keeps image/video generation
 	// away from Grok accounts that are explicitly disabled or whose billing
 	// entitlement probe was forbidden. Video status lookups intentionally do not
@@ -1932,6 +1934,16 @@ func (a *Account) SupportsOpenAIEndpointCapability(capability OpenAIEndpointCapa
 		configured, _ := a.openAIEndpointCapabilitySet()
 		return configured["tokenhub_video"] && a.Platform == PlatformOpenAI && a.Type == AccountTypeAPIKey &&
 			strings.TrimSpace(a.GetCredential("api_key")) != "" && isTokenHubImageAccount(a)
+	}
+	if capability == OpenAIEndpointCapabilityTokenHubSpeech {
+		configured, _ := a.openAIEndpointCapabilitySet()
+		return configured["tokenhub_speech"] && a.Platform == PlatformOpenAI && a.Type == AccountTypeAPIKey &&
+			strings.TrimSpace(a.GetCredential("api_key")) != "" && isTokenHubSpeechAccount(a)
+	}
+	if capability == OpenAIEndpointCapabilityMediaKitASR {
+		configured, _ := a.openAIEndpointCapabilitySet()
+		return configured["mediakit_asr"] && a.Platform == PlatformOpenAI && a.Type == AccountTypeAPIKey &&
+			strings.TrimSpace(a.GetCredential("api_key")) != "" && isMediaKitASRAccount(a)
 	}
 	if capability == "" {
 		return true

@@ -1789,7 +1789,9 @@ const openAIEndpointCapabilityOptions = computed<
   { value: 'chat_completions', label: openAITextEndpointCapabilityLabel.value },
   { value: 'embeddings', label: t('admin.accounts.openai.capabilityEmbeddings') },
   { value: 'seedance', label: 'Seedance (Ark)' },
-  { value: 'tokenhub_video', label: 'TokenHub Video (Ark)' }
+  { value: 'tokenhub_video', label: 'TokenHub Video (Ark)' },
+  { value: 'tokenhub_speech', label: 'TokenHub MiniMax TTS / Voice Clone' },
+  { value: 'mediakit_asr', label: 'Volcengine MediaKit ASR' }
 ])
 const openAITextGenerationCapabilityEnabled = computed(() =>
   openAIEndpointCapabilities.value.includes('chat_completions')
@@ -1799,7 +1801,7 @@ const openAIResponsesModeApplicable = computed(
 )
 
 const normalizeOpenAIEndpointCapabilities = (values: OpenAIEndpointCapability[]) => {
-  const allowed: OpenAIEndpointCapability[] = ['chat_completions', 'embeddings', 'seedance', 'tokenhub_video']
+  const allowed: OpenAIEndpointCapability[] = ['chat_completions', 'embeddings', 'seedance', 'tokenhub_video', 'tokenhub_speech', 'mediakit_asr']
   const selected = allowed.filter((value) => values.includes(value))
   return selected.length > 0 ? selected : ['chat_completions', 'embeddings'] as OpenAIEndpointCapability[]
 }
@@ -1809,6 +1811,24 @@ const toggleOpenAIEndpointCapability = (
   event?: Event
 ) => {
   if (capability === 'tokenhub_video') {
+    openAIEndpointCapabilities.value = openAIEndpointCapabilities.value.includes(capability)
+      ? normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value.filter((value) => value !== capability))
+      : normalizeOpenAIEndpointCapabilities([...openAIEndpointCapabilities.value, capability])
+    if (openAIEndpointCapabilities.value.includes(capability)) {
+      baseUrl.value = 'https://tokenhub.tencentmaas.com'
+    }
+    return
+  }
+  if (capability === 'mediakit_asr') {
+    openAIEndpointCapabilities.value = openAIEndpointCapabilities.value.includes(capability)
+      ? normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value.filter((value) => value !== capability))
+      : normalizeOpenAIEndpointCapabilities([...openAIEndpointCapabilities.value, capability])
+    if (openAIEndpointCapabilities.value.includes(capability)) {
+      baseUrl.value = 'https://mediakit.cn-beijing.volces.com/api/v1'
+    }
+    return
+  }
+  if (capability === 'tokenhub_speech') {
     openAIEndpointCapabilities.value = openAIEndpointCapabilities.value.includes(capability)
       ? normalizeOpenAIEndpointCapabilities(openAIEndpointCapabilities.value.filter((value) => value !== capability))
       : normalizeOpenAIEndpointCapabilities([...openAIEndpointCapabilities.value, capability])
@@ -2008,7 +2028,9 @@ const buildUpdatePayload = (): Record<string, unknown> | null => {
 
   if (applyOpenAIEndpointCapabilities) {
     credentials.openai_capabilities =
-      openAIEndpointCapabilities.value.length === 2 && !openAIEndpointCapabilities.value.includes('seedance')
+      openAIEndpointCapabilities.value.length === 2 &&
+      openAIEndpointCapabilities.value.includes('chat_completions') &&
+      openAIEndpointCapabilities.value.includes('embeddings')
         ? null
         : [...openAIEndpointCapabilities.value]
     credentialsChanged = true

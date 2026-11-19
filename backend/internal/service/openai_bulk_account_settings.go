@@ -95,7 +95,8 @@ func normalizeBulkOpenAIEndpointCapabilities(raw any) (any, bool, error) {
 	for _, value := range values {
 		switch OpenAIEndpointCapability(value) {
 		case OpenAIEndpointCapabilityChatCompletions, OpenAIEndpointCapabilityEmbeddings,
-			OpenAIEndpointCapabilitySeedance, OpenAIEndpointCapabilityTokenHubVideo:
+			OpenAIEndpointCapabilitySeedance, OpenAIEndpointCapabilityTokenHubVideo,
+			OpenAIEndpointCapabilityTokenHubSpeech, OpenAIEndpointCapabilityMediaKitASR:
 			selected[value] = true
 		default:
 			return nil, false, invalidBulkOpenAIEndpointCapabilities()
@@ -106,7 +107,8 @@ func normalizeBulkOpenAIEndpointCapabilities(raw any) (any, bool, error) {
 	}
 	includeChat := selected[string(OpenAIEndpointCapabilityChatCompletions)]
 	if includeChat && selected[string(OpenAIEndpointCapabilityEmbeddings)] &&
-		!selected[string(OpenAIEndpointCapabilitySeedance)] && !selected[string(OpenAIEndpointCapabilityTokenHubVideo)] {
+		!selected[string(OpenAIEndpointCapabilitySeedance)] && !selected[string(OpenAIEndpointCapabilityTokenHubVideo)] &&
+		!selected[string(OpenAIEndpointCapabilityTokenHubSpeech)] && !selected[string(OpenAIEndpointCapabilityMediaKitASR)] {
 		return nil, true, nil
 	}
 	capabilities := make([]string, 0, len(selected))
@@ -115,6 +117,8 @@ func normalizeBulkOpenAIEndpointCapabilities(raw any) (any, bool, error) {
 		OpenAIEndpointCapabilityEmbeddings,
 		OpenAIEndpointCapabilitySeedance,
 		OpenAIEndpointCapabilityTokenHubVideo,
+		OpenAIEndpointCapabilityTokenHubSpeech,
+		OpenAIEndpointCapabilityMediaKitASR,
 	} {
 		if selected[string(value)] {
 			capabilities = append(capabilities, string(value))

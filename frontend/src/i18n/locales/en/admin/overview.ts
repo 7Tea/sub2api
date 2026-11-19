@@ -1119,6 +1119,8 @@ export default {
       voicePricing: {
         title: 'Grok Voice Pricing',
         description: 'Optional per-group prices for Voice realtime / TTS / STT (USD). Leave empty to leave unpriced.',
+        mediaKitASRTitle: 'ASR / TTS Voice Pricing',
+        mediaKitASRDescription: 'MediaKit ASR is billed by audio duration and TokenHub MiniMax TTS by characters. Leave empty to use default STT/TTS prices.',
         audioRealtimePerMin: 'Realtime price per minute (USD)',
         audioTtsPerMillionChars: 'TTS price per million chars (USD)',
         audioSttPerHour: 'STT price per hour (USD)',

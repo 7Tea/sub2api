@@ -1116,6 +1116,8 @@ export default {
       voicePricing: {
         title: 'Grok Voice 定价',
         description: '分组级 Voice realtime / TTS / STT 单价（USD）。留空表示未配置。',
+        mediaKitASRTitle: 'ASR / TTS 语音定价',
+        mediaKitASRDescription: 'MediaKit ASR 按识别时长计费，TokenHub MiniMax TTS 按字符计费。留空分别使用 STT/TTS 默认价格。',
         audioRealtimePerMin: 'Realtime 每分钟价格（USD）',
         audioTtsPerMillionChars: 'TTS 每百万字符价格（USD）',
         audioSttPerHour: 'STT 每小时价格（USD）',

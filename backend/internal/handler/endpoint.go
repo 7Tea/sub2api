@@ -31,6 +31,7 @@ const (
 	EndpointVideosExtensions     = "/v1/videos/extensions"
 	EndpointVideos               = "/v1/videos"
 	EndpointSeedanceTasks        = "/api/v3/contents/generations/tasks"
+	EndpointMediaKitASRTasks     = "/v1/audio/transcriptions/tasks"
 	EndpointGeminiModels         = "/v1beta/models"
 	EndpointGeminiCachedContents = "/v1beta/cachedContents"
 )
@@ -85,6 +86,8 @@ const (
 func NormalizeInboundEndpoint(path string) string {
 	path = strings.TrimSpace(path)
 	switch {
+	case strings.Contains(path, "/audio/transcriptions/tasks"):
+		return EndpointMediaKitASRTasks
 	case strings.Contains(path, "/contents/generations/tasks"):
 		return EndpointSeedanceTasks
 	case strings.Contains(path, EndpointResponsesInputTokens) || isResponsesInputTokensAliasPath(path):
