@@ -101,11 +101,11 @@ describe('UserPlatformQuotaModal', () => {
     expect(apiMocks.getPlatformQuotas).toHaveBeenCalledWith(99)
   })
 
-  it('renders all thirteen supported platforms with empty limits', async () => {
+  it('renders all supported platforms with empty limits', async () => {
     const w = await mountAndOpen()
     const rows = w.findAll('tbody tr')
     expect(rows.map(row => row.find('td').text())).toEqual([
-      'anthropic', 'openai', 'gemini', 'antigravity', 'grok',
+      'anthropic', 'openai', 'gemini', 'antigravity', 'grok', 'heygen',
       'kimi', 'zhipu', 'deepseek', 'minimax', 'opencode_go', 'typesafe', 'command_code', 'cline',
     ])
     for (const row of rows) {

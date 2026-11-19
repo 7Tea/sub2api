@@ -196,6 +196,21 @@ func TestGatewayRoutesGrokImagesAndVideosPathsAreRegistered(t *testing.T) {
 	}
 }
 
+func TestGatewayRoutesHeyGenPlatformUsesDedicatedVideoHandlers(t *testing.T) {
+	router := newGatewayRoutesTestRouter(service.PlatformHeyGen)
+	registered := make(map[string]bool)
+	for _, route := range router.Routes() {
+		registered[route.Method+" "+route.Path] = true
+	}
+	for _, route := range []string{
+		"POST /v1/videos", "POST /v1/videos/generations",
+		"GET /v1/videos/:request_id", "GET /v1/videos/generations/:request_id",
+		"GET /v1/models", "GET /models",
+	} {
+		require.True(t, registered[route], "%s should be registered", route)
+	}
+}
+
 func TestGatewayRoutesGrokCustomVoiceCRUDPathsAreRegistered(t *testing.T) {
 	router := newGatewayRoutesTestRouter(service.PlatformGrok)
 	registered := make(map[string]bool)

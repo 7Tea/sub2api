@@ -2620,6 +2620,30 @@ func TestOpenAIGatewayServiceRecordUsage_HydratesGroupImagePriceWhenAuthSnapshot
 	require.Equal(t, string(BillingModeImage), *usageRepo.lastLog.BillingMode)
 }
 
+func TestOpenAIGatewayServiceRecordUsage_HeyGenKeepsFullDurationAndCost(t *testing.T) {
+	price := 0.01
+	usageRepo := &openAIRecordUsageLogRepoStub{inserted: true}
+	svc := newOpenAIRecordUsageServiceForTest(usageRepo, &openAIRecordUsageUserRepoStub{}, &openAIRecordUsageSubRepoStub{}, nil)
+	err := svc.RecordUsage(context.Background(), &OpenAIRecordUsageInput{
+		Result: &OpenAIForwardResult{
+			RequestID: "heygen-long-video", Model: HeyGenVideoModel, BillingModel: HeyGenVideoModel, UpstreamModel: HeyGenVideoModel,
+			VideoCount: 1, VideoResolution: VideoBillingResolution720P, VideoDurationSeconds: 69,
+		},
+		APIKey: &APIKey{ID: 10133, GroupID: i64p(133), Group: &Group{
+			ID: 133, Platform: PlatformHeyGen, RateMultiplier: 1, VideoPrice720P: &price,
+		}},
+		User: &User{ID: 20133}, Account: &Account{ID: 30133, Platform: PlatformHeyGen, Type: AccountTypeAPIKey},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, usageRepo.lastLog)
+	require.NotNil(t, usageRepo.lastLog.VideoDurationSeconds)
+	require.Equal(t, 69, *usageRepo.lastLog.VideoDurationSeconds)
+	require.Equal(t, 1, usageRepo.lastLog.VideoCount)
+	require.InDelta(t, 0.69, usageRepo.lastLog.TotalCost, 1e-12)
+	require.InDelta(t, 0.69, usageRepo.lastLog.ActualCost, 1e-12)
+	require.Equal(t, string(BillingModeVideo), *usageRepo.lastLog.BillingMode)
+}
+
 func TestOpenAIGatewayServiceRecordUsage_HydratesGroupVideoPriceWhenAuthSnapshotOmitsIt(t *testing.T) {
 	groupID := int64(131)
 	groupVideoPrice720P := 0.037

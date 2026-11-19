@@ -219,6 +219,29 @@ describe('CreateAccountModal OpenAI long-context billing', () => {
 
   afterEach(() => vi.useRealTimers())
 
+  it('creates a HeyGen API-key account with the native base URL and video model', async () => {
+    const wrapper = mountModal()
+    await wrapper.get('[data-testid="platform-button-heygen"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.findComponent(OAuthAuthorizationFlowStub).exists()).toBe(false)
+    expect(wrapper.findAll('input[type="text"]').some(input =>
+      (input.element as HTMLInputElement).value === 'https://api.heygen.com/v3'
+    )).toBe(true)
+    await wrapper.get('form#create-account-form input[type="text"]').setValue('HeyGen test')
+    await wrapper.get('form#create-account-form input[type="password"]').setValue('heygen-test-key')
+    await wrapper.get('form#create-account-form').trigger('submit.prevent')
+    await flushPromises()
+    expect(createAccountMock).toHaveBeenCalledWith(expect.objectContaining({
+      platform: 'heygen', type: 'apikey', upstream_billing_probe_enabled: false,
+      credentials: expect.objectContaining({
+        base_url: 'https://api.heygen.com/v3', api_key: 'heygen-test-key',
+        model_mapping: { 'heygen-avatar-video': 'heygen-avatar-video' }
+      })
+    }))
+    expect(probeUpstreamBillingMock).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
   it('sets month and year expiry presets without submitting the account form', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-01-31T12:34:00'))
