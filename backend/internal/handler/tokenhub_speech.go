@@ -89,8 +89,38 @@ func (h *OpenAIGatewayHandler) tokenHubMiniMaxSpeech(c *gin.Context, operation s
 		h.errorResponse(c, status, code, message)
 		return
 	}
-	if operation == "tts" || strings.TrimSpace(gjson.GetBytes(body, "text").String()) != "" {
+	if operation == "clone" {
+		price, err := h.gatewayService.TokenHubVoiceClonePrice(c.Request.Context(), apiKey)
+		if err != nil {
+			h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", err.Error())
+			return
+		}
+		// A clone has a known fixed charge. Reject insufficient balance
+		// before creating an upstream voice, even if reservations are disabled.
+		if h.cfg == nil || h.cfg.RunMode != "simple" {
+			if !apiKey.Group.IsSubscriptionType() || subscription == nil {
+				balance, balanceErr := h.billingCacheService.GetUserBalance(c.Request.Context(), apiKey.User.ID)
+				if balanceErr != nil {
+					h.errorResponse(c, http.StatusServiceUnavailable, "api_error", "Could not check clone balance")
+					return
+				}
+				rate := h.gatewayService.ResolveUserGroupRateMultiplier(c.Request.Context(), apiKey.User.ID, apiKey.Group.ID, apiKey.Group.RateMultiplier)
+				if rate < 0 {
+					rate = 0
+				}
+				if balance < service.QuantizeUsageBillingAmount(price*rate) {
+					status, code, message, _ := billingErrorDetails(service.ErrInsufficientBalance)
+					h.errorResponse(c, status, code, message)
+					return
+				}
+			}
+		}
+	}
+	if operation == "tts" || operation == "clone" {
 		estimate := grokVoiceInflightEstimate("tts", body)
+		if operation == "clone" {
+			estimate = service.InflightEstimateRequest{Model: "minimax-voice-clone", Kind: service.InflightEstimateAudio, AudioMode: "clone", AudioUnits: 1}
+		}
 		inflightDone, reserveErr := reserveInflightBalance(c, h.billingCacheService, h.gatewayService, apiKey, subscription, estimate)
 		if reserveErr != nil {
 			status, code, message, retryAfter := billingErrorDetails(reserveErr)

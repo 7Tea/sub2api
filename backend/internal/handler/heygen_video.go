@@ -83,8 +83,8 @@ func (h *OpenAIGatewayHandler) createHeyGenVideo(c *gin.Context, key *service.AP
 		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "HeyGen resolution must be 720p or 1080p")
 		return
 	}
-	if key.Group.GetVideoPriceForModel(service.HeyGenVideoModel, resolution) == nil {
-		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "HeyGen video price is not configured for this resolution")
+	if !h.gatewayService.HasHeyGenVideoPricing(c.Request.Context(), key, resolution) {
+		h.errorResponse(c, http.StatusBadRequest, "invalid_request_error", "Configure heygen-avatar-video with video pricing in the group's model pricing for this resolution")
 		return
 	}
 	if !h.selectHeyGenVideoAccount(c, key, service.HeyGenVideoModel, "", subject, subscription, body) {

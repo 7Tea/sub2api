@@ -10,7 +10,6 @@ import {
   imagePricingI18nKey,
   supportsImagePricingPlatform,
   supportsVideoPricingPlatform,
-  supportsVoicePricingPlatform,
   videoPricingI18nKey,
 } from "../groupsImagePricing";
 
@@ -20,21 +19,9 @@ describe("groups image pricing platform support", () => {
     expect(imagePricingPlatforms.has("grok")).toBe(true);
   });
 
-	it("enables video pricing controls for Grok and HeyGen", () => {
+  it("enables video pricing controls for Grok only", () => {
     expect(supportsVideoPricingPlatform("grok")).toBe(true);
-		expect(supportsVideoPricingPlatform("heygen")).toBe(true);
-    expect(supportsVideoPricingPlatform("composite")).toBe(true);
     expect(supportsVideoPricingPlatform("openai")).toBe(false);
-  });
-
-  it("exposes Composite speech pricing without changing unsupported platforms", () => {
-    expect(supportsVoicePricingPlatform('composite')).toBe(true);
-    expect(supportsVoicePricingPlatform('openai')).toBe(true);
-    expect(supportsVoicePricingPlatform('grok')).toBe(true);
-    expect(supportsVoicePricingPlatform('heygen')).toBe(false);
-    expect(supportsVoicePricingPlatform('anthropic')).toBe(false);
-    expect(videoPricingI18nKey('description', 'composite')).toBe('admin.groups.videoPricing.compositeDescription');
-    expect(videoPricingI18nKey('modeHint', 'composite')).toBe('admin.groups.videoPricing.compositeModeHint');
   });
 
   it("keeps non-media group platforms out of the image pricing controls", () => {
@@ -59,9 +46,6 @@ describe("groups image pricing platform support", () => {
       "admin.groups.imagePricing.title",
     );
     expect(videoPricingI18nKey("title")).toBe("admin.groups.videoPricing.title");
-    expect(videoPricingI18nKey("modeHint", "grok")).toBe("admin.groups.videoPricing.modeHint");
-    expect(videoPricingI18nKey("modeHint", "heygen")).toBe("admin.groups.videoPricing.heygenModeHint");
-    expect(videoPricingI18nKey("description", "heygen")).toBe("admin.groups.videoPricing.heygenDescription");
   });
 
   it("uses Grok media defaults instead of generic image fallback placeholders", () => {

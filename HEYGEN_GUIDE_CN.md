@@ -6,13 +6,13 @@ HeyGen 已作为独立分组平台接入。当前支持 HeyGen v3 的图片数�
 
 1. 在账号管理中创建 **HeyGen** 平台 API Key 账号。
 2. Base URL 使用 `https://api.heygen.com/v3`，API Key 使用 HeyGen 控制台签发的 Key。
-3. 将账号加入 HeyGen 分组，为目标分辨率设置视频单价，并把 `heygen-avatar-video` 加入模型白名单（如果分组启用了白名单）。未配置单价时，创建任务会被拒绝。
+3. 将账号加入 HeyGen 或 Composite 分组，在「分组逐模型定价 → 添加模型价格」填写 `heygen-avatar-video`，计费模式选「视频」，填写默认每秒价，或按 `720p` / `1080p` 添加不同价格档位。若分组启用了模型白名单，也要允许此模型。未配置目标分辨率的有效视频价卡或旧版视频单价时，创建任务会被拒绝。详细步骤见 [逐模型定价教程](MEDIA_MODEL_PRICING_CN.md)。
 4. 若该 Sub2API API Key 由 Kox 管理，视频完成时的用量记录会沿用现有结算和 Kox 用量同步流程。
 
 ## 创建数字人视频
 
 HeyGen 能访问的公网 URL 可直接作为图片和音频输入。也可传已上传到同一个 HeyGen 账号中的 `asset_id`。
-当前网关定价档支持 `720p` 和 `1080p`，每个分辨率都需要先配置分组单价。
+当前网关定价档支持 `720p` 和 `1080p`。两档价格相同时可只填写默认每秒价；不同时添加分辨率档位。
 
 ```bash
 curl "$BASE_URL/v1/videos" \
