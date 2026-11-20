@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
+	"github.com/Wei-Shaw/sub2api/internal/pkg/ctxkey"
 	middleware "github.com/Wei-Shaw/sub2api/internal/server/middleware"
 	"github.com/Wei-Shaw/sub2api/internal/service"
 	"github.com/gin-gonic/gin"
@@ -121,14 +122,18 @@ func TestCompositeMediaSingleKeyLifecycleAndOwnership(t *testing.T) {
 		return &http.Response{StatusCode: 200, Header: http.Header{"Content-Type": []string{"application/json"}}, Body: io.NopCloser(strings.NewReader(body))}, nil
 	}}
 	cfg := &config.Config{RunMode: config.RunModeSimple}
-	gateway := service.NewOpenAIGatewayService(repo, usage, nil, nil, nil, nil, bindings, cfg, nil, concurrency, &service.BillingService{}, nil, nil, upstream, service.NewDeferredService(repo, nil, time.Hour), nil, nil, nil, nil, nil, nil, nil)
+	pricing := &service.BillingService{}
+	gateway := service.NewOpenAIGatewayService(repo, usage, nil, nil, nil, nil, bindings, cfg, nil, concurrency, pricing, nil, nil, upstream, service.NewDeferredService(repo, nil, time.Hour), nil, nil, service.NewModelPricingResolver(nil, pricing), nil, nil, nil, nil)
 	billing := service.NewBillingCacheService(nil, nil, nil, nil, nil, nil, cfg, nil)
 	t.Cleanup(billing.Stop)
 	h := NewOpenAIGatewayHandler(gateway, concurrency, billing, nil, nil, nil, nil, nil, cfg)
+	requestSequence := 0
 	newContext := func(method, taskID, body, platform string) (*gin.Context, *httptest.ResponseRecorder) {
 		c, w := grokMediaSlotContext(context.Background(), method == http.MethodPost)
 		c.Request = httptest.NewRequest(method, "/test", strings.NewReader(body))
 		c.Request.Header.Set("Content-Type", "application/json")
+		requestSequence++
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), ctxkey.ClientRequestID, fmt.Sprintf("http-request-%d", requestSequence)))
 		if platform != "" {
 			c.Request = c.Request.WithContext(service.WithResolvedTargetPlatform(c.Request.Context(), platform))
 		}
@@ -136,10 +141,13 @@ func TestCompositeMediaSingleKeyLifecycleAndOwnership(t *testing.T) {
 		key, _ := middleware.GetAPIKeyFromContext(c)
 		key.Group.Platform = service.PlatformComposite
 		key.Group.RateMultiplier = 1
-		tts, asr, video := 2.0, 1.0, 0.05
-		key.Group.AudioTTSPricePerMillionChars = &tts
-		key.Group.AudioSTTPricePerHour = &asr
-		key.Group.VideoPrice720P = &video
+		tts, asr, video, clone := 2.0, 1.0, 0.05, 1.4776
+		key.Group.ModelPricing = []service.ChannelModelPricing{
+			{Models: []string{"minimax-speech-2.8-hd"}, BillingMode: service.BillingModePerRequest, PerRequestPrice: &tts},
+			{Models: []string{service.MediaKitASRModel}, BillingMode: service.BillingModePerRequest, PerRequestPrice: &asr},
+			{Models: []string{service.HeyGenVideoModel}, BillingMode: service.BillingModeVideo, PerRequestPrice: &video},
+			{Models: []string{"minimax-voice-clone"}, BillingMode: service.BillingModePerRequest, PerRequestPrice: &clone},
+		}
 		return c, w
 	}
 	for _, call := range []struct {
@@ -170,15 +178,18 @@ func TestCompositeMediaSingleKeyLifecycleAndOwnership(t *testing.T) {
 		require.Contains(t, w.Body.String(), "result.mp4")
 		slots.assertReleased(t)
 	}
-	require.Len(t, usage.logs, 3, "clone without preview is free; repeated ASR/video polls must deduplicate")
+	require.Len(t, usage.logs, 4, "one clone charge is separate from TTS; repeated ASR/video polls deduplicate")
 	for _, log := range usage.logs {
 		require.Equal(t, int64(20), log.APIKeyID)
 		require.Equal(t, int64(24), *log.GroupID)
 		switch log.Model {
+		case "minimax-voice-clone":
+			require.InDelta(t, 1.4776, log.TotalCost, 1e-9)
 		case service.HeyGenVideoModel:
 			require.Equal(t, 69, *log.VideoDurationSeconds)
 			require.InDelta(t, 3.45, log.TotalCost, 1e-9)
 		case service.MediaKitASRModel:
+			require.Equal(t, "grok_audio:mediakit-asr:asr-test", log.RequestID)
 			require.InDelta(t, 68.7/3600, log.TotalCost, 1e-9)
 		default:
 			require.InDelta(t, 26*2.0/1e6, log.TotalCost, 1e-9)

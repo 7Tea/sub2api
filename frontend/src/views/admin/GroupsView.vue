@@ -1066,7 +1066,7 @@
             {{ t(videoPricingI18nKey("title")) }}
           </label>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            {{ t(videoPricingI18nKey("description", createForm.platform)) }}
+            {{ t(videoPricingI18nKey("description")) }}
           </p>
           <div class="mb-4">
             <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -1169,7 +1169,7 @@
             </div>
           </div>
           <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-            {{ t(videoPricingI18nKey("modeHint", createForm.platform)) }}
+            {{ t(videoPricingI18nKey("modeHint")) }}
           </p>
           <div class="mt-2 rounded-lg bg-gray-50 p-3 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
             <div class="mb-1 font-medium">
@@ -1509,19 +1509,19 @@
           </div>
         </div>
 
-        <!-- Grok voice prices and OpenAI-group MediaKit ASR pricing. -->
+        <!-- Grok Voice 显式定价（仅 grok 平台） -->
         <div
-          v-if="supportsVoicePricingPlatform(createForm.platform)"
+          v-if="createForm.platform === 'grok'"
           class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4"
         >
           <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            {{ createForm.platform === 'grok' ? t("admin.groups.explicitPricing.title") : t("admin.groups.voicePricing.mediaKitASRTitle") }}
+            {{ t("admin.groups.explicitPricing.title") }}
           </h4>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            {{ createForm.platform === 'grok' ? t("admin.groups.explicitPricing.description") : t("admin.groups.voicePricing.mediaKitASRDescription") }}
+            {{ t("admin.groups.explicitPricing.description") }}
           </p>
           <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <div v-if="createForm.platform === 'grok'">
+            <div>
               <label class="input-label">{{ t("admin.groups.explicitPricing.searchPricePer1k") }}</label>
               <input
                 v-model.number="createForm.search_price_per_1k"
@@ -1533,7 +1533,7 @@
                 data-testid="create-search-price"
               />
             </div>
-            <div v-if="createForm.platform === 'grok'">
+            <div>
               <label class="input-label">{{ t("admin.groups.voicePricing.audioRealtimePerMin") }}</label>
               <input
                 v-model.number="createForm.audio_realtime_price_per_min"
@@ -2720,7 +2720,7 @@
             {{ t(videoPricingI18nKey("title")) }}
           </label>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            {{ t(videoPricingI18nKey("description", editForm.platform)) }}
+            {{ t(videoPricingI18nKey("description")) }}
           </p>
           <div class="mb-4">
             <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -2823,7 +2823,7 @@
             </div>
           </div>
           <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-            {{ t(videoPricingI18nKey("modeHint", editForm.platform)) }}
+            {{ t(videoPricingI18nKey("modeHint")) }}
           </p>
           <div class="mt-2 rounded-lg bg-gray-50 p-3 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
             <div class="mb-1 font-medium">
@@ -3175,17 +3175,17 @@
 
         <!-- Grok Voice 显式定价（仅 grok 平台） -->
         <div
-          v-if="supportsVoicePricingPlatform(editForm.platform)"
+          v-if="editForm.platform === 'grok'"
           class="border-t border-gray-200 dark:border-dark-400 pt-4 mt-4"
         >
           <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            {{ editForm.platform === 'grok' ? t("admin.groups.explicitPricing.title") : t("admin.groups.voicePricing.mediaKitASRTitle") }}
+            {{ t("admin.groups.explicitPricing.title") }}
           </h4>
           <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-            {{ editForm.platform === 'grok' ? t("admin.groups.explicitPricing.description") : t("admin.groups.voicePricing.mediaKitASRDescription") }}
+            {{ t("admin.groups.explicitPricing.description") }}
           </p>
           <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <div v-if="editForm.platform === 'grok'">
+            <div>
               <label class="input-label">{{ t("admin.groups.explicitPricing.searchPricePer1k") }}</label>
               <input
                 v-model.number="editForm.search_price_per_1k"
@@ -3197,7 +3197,7 @@
                 data-testid="edit-search-price"
               />
             </div>
-            <div v-if="editForm.platform === 'grok'">
+            <div>
               <label class="input-label">{{ t("admin.groups.voicePricing.audioRealtimePerMin") }}</label>
               <input
                 v-model.number="editForm.audio_realtime_price_per_min"
@@ -4400,7 +4400,6 @@ import {
   imagePricingI18nKey,
   supportsImagePricingPlatform,
   supportsVideoPricingPlatform,
-  supportsVoicePricingPlatform,
   videoPricingI18nKey,
 } from "./groupsImagePricing";
 import {

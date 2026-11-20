@@ -135,7 +135,17 @@
 - **自研部分修改**：本次新增 `handler/composite_media.go`、`service/composite_media.go` 及对应测试；调整此前新增的 `handler/heygen_video.go`、`mediakit_asr.go`、`tokenhub_speech.go` 的分组准入，使其支持正确解析到目标平台的 Composite 请求。文档见 `COMPOSITE_MEDIA_GUIDE_CN.md`。
 - **不涉及**：Kox 核心及用量事务桥接、数据库表和迁移、扣款与回调实现、正式 Docker 配置、上游账号 Key、云端运行配置。只解决请求分发和价格配置入口，不重新实现计费。
 
+## 2026-11-20 收敛媒体定价前端改动
+
+- **原项目源码修改**：`frontend/src/views/admin/GroupsView.vue`、`groupsImagePricing.ts`、对应 `__tests__/groupsImagePricing.spec.ts` 及 `i18n/locales/{zh,en}/admin/overview.ts` 全部恢复到 Kiiik 的 `3e91eedff` 版本。取消本地新增的 OpenAI/Composite 语音通用面板和 HeyGen/Composite 视频通用面板，直接使用该版本已有的「分组逐模型定价」。上述五个文件相对该基准无净差异，减少后续合并接入点；账号创建/编辑能力选项和 HeyGen 平台入口保留。
+- **自研部分修改**：`handler/heygen_video.go` 和 `service/heygen_video.go` 的创建价格准入识别现有 Group/Channel 视频模型价卡，防止已配置模型价格却被旧通用字段拦截；旧通用视频价格继续兼容，模型 Token 价卡不用于无 token 的视频计量。增加 `service/media_model_pricing_test.go`，并调整 `handler/composite_media_test.go` 验证逐模型定价、实际单位、倍率、完整时长、所有权及轮询去重。更新四份媒体接入指南，新增 `MEDIA_MODEL_PRICING_CN.md` 操作教程。
+- **不涉及**：原项目后端计费计算、供应商协议、账号平台归类、数据库迁移、Kox 核心和扣费事务、现有账号/分组价格、历史任务费用；不把时长或字符换算成虚拟 token。下方 TSV 继续保留原快照含义，不用本次文件覆盖历史归属清单。
+
 ## 后续使用与刷新
+
+2026-11-20 经用户明确授权修正独立克隆模型计费：原项目源码修改 **无**。自研仅修改 `service/tokenhub_speech.go`、`handler/tokenhub_speech.go`：`minimax-voice-clone` 成功返回 voice_id 按一次操作进入已有模型按次定价，要求显式克隆价卡；标准余额模式先检查完整单次费用，沿用现有在途预留和结算。TTS 字符计费不附加克隆激活费，不按上游 use_count 拆出额外账单。新增自研 `service/tokenhub_clone_pricing_test.go`，调整 `handler/composite_media_test.go`，同步两份根目录语音说明。不改前端、通用计费、Kox、数据库结构、模型价卡或用户余额，不追扣历史克隆；属于用户选择的本地成功创建收费规则，与供应商的延后成本计量分开。
+
+2026-11-20 真实语音联调补充：仅修改自研 `backend/internal/handler/mediakit_asr.go` 的任务计费 ID，复用已有 `StableGrokAudioBillingRequestID`，防止 HTTP 中间件的每次请求 ID 覆盖任务 ID 导致重复轮询扣费。`handler/composite_media_test.go` 补充每次请求不同 ClientRequestID 的回归场景。原项目源码修改：无；不修改通用去重、扣费事务、前端、数据库结构。此前无请求 ID 中间件的测试未覆盖该问题；此条记录真实测试发现及修复边界。
 
 每次修改前引用本清单并按 `AGENTS.md` 分别声明原源码修改、自研修改和不涉及范围；涉及混合文件时写明具体函数或字段。功能完成后更新对应边界条目和文件清单，未涉及类别明确写“无”。
 

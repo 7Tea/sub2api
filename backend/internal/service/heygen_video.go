@@ -137,6 +137,38 @@ func heyGenBaseURL(account *Account) (string, error) {
 	return "https://api.heygen.com/v3", nil
 }
 
+// HasHeyGenVideoPricing admits the same per-model video cards used by RecordUsage.
+// Keep legacy flat group prices usable while operators move to model pricing.
+func (s *OpenAIGatewayService) HasHeyGenVideoPricing(ctx context.Context, key *APIKey, resolution string) bool {
+	if s == nil || key == nil || key.Group == nil {
+		return false
+	}
+	resolved := s.resolveOpenAIChannelPricing(ctx, HeyGenVideoModel, key)
+	if resolved != nil {
+		// Token cards cannot price HeyGen's duration-only usage. Group cards
+		// override legacy prices, so a wrong/empty group card must not pass.
+		if resolved.Mode == BillingModeToken || resolved.Source == PricingSourceGroup {
+			return configuredHeyGenVideoTier(resolved, resolution)
+		}
+		if key.Group.GetVideoPriceForModel(HeyGenVideoModel, resolution) == nil {
+			return configuredHeyGenVideoTier(resolved, resolution)
+		}
+	}
+	return key.Group.GetVideoPriceForModel(HeyGenVideoModel, resolution) != nil
+}
+
+func configuredHeyGenVideoTier(resolved *ResolvedPricing, resolution string) bool {
+	if resolved.Mode != BillingModeVideo || resolved.channelPricing == nil {
+		return false
+	}
+	for _, tier := range resolved.RequestTiers {
+		if tier.TierLabel == resolution && tier.PerRequestPrice != nil {
+			return true
+		}
+	}
+	return resolved.channelPricing.PerRequestPrice != nil
+}
+
 func HeyGenVideoStatus(body []byte) (status string, durationSeconds int, resolution string) {
 	status = strings.ToLower(strings.TrimSpace(gjson.GetBytes(body, "data.status").String()))
 	if status == "" {

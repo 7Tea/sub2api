@@ -169,7 +169,10 @@ func (h *OpenAIGatewayHandler) getMediaKitASRTask(c *gin.Context, key *service.A
 		durationSeconds := service.MediaKitASRDurationSeconds(upstream.Result)
 		if durationSeconds > 0 {
 			result := &service.OpenAIForwardResult{
-				RequestID:     "mediakit-asr:" + taskID,
+				// A polling HTTP request gets a fresh client ID from middleware.
+				// Reuse the existing durable audio-event namespace so that ID
+				// cannot override this task's billing identity in RecordUsage.
+				RequestID:     service.StableGrokAudioBillingRequestID("mediakit-asr:" + taskID),
 				Model:         service.MediaKitASRModel,
 				BillingModel:  service.MediaKitASRModel,
 				UpstreamModel: service.MediaKitASRModel,
